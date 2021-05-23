@@ -11,10 +11,11 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.layers import Dense, Input, LSTM, Embedding, Dropout, Activation, Flatten, Bidirectional, GlobalMaxPool1D
 from keras.models import Model
 from tqdm.notebook import tqdm
-
+from tensorflow import keras
 import pandas as pd
 import numpy as np
 import tensorflow as tf
+import os
 import re
 #%%
 train_data=pd.read_csv("c:/temp/train_data.csv",index_col=('Unnamed: 0'))
@@ -39,6 +40,21 @@ model = Model(input_layer,output_layer)
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 model.summary()
 #%%
-model.fit(train_data,target,epochs=4,batch_size=512)
+# Include the epoch in the file name (uses `str.format`)
+checkpoint_path = "c:/temp/training_2/cp-{epoch:04d}.ckpt"
+checkpoint_dir = os.path.dirname(checkpoint_path)
+print(checkpoint_path)
+# Create a callback that saves the model's weights every 5 epochs
+cp_callback = tf.keras.callbacks.ModelCheckpoint(
+    filepath=checkpoint_path, 
+    verbose=1, 
+    save_weights_only=True,
+    save_freq=512)
+
+
+# Save the weights using the `checkpoint_path` format
+model.save_weights(checkpoint_path.format(epoch=0))
+#%%
+model.fit(train_data,target,epochs=4,callbacks=[cp_callback], batch_size=512)
 #%%
 model.evaluate(train_data,target)
